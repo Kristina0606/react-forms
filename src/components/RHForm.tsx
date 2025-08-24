@@ -1,10 +1,36 @@
 import type { FC } from 'react';
+import { useForm } from 'react-hook-form';
+
+interface FormValues {
+  firstname: string;
+  age: string;
+  gender: string;
+  country: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 const RHForm: FC = () => {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+    watch,
+  } = useForm<FormValues>();
+
+  const onSubmit = (data: any) => {
+    console.log(JSON.stringify(data));
+  };
+
+  const watchedValue = watch('password');
   return (
     <>
       <div>
-        <form className="text-sm font-light p-3 flex flex-col divide-y divide-gray-100 border rounded-lg border-[#5d2611] hover:border-[#cd7479] duration-300">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="w-100 text-sm font-light p-3 flex flex-col divide-y divide-gray-200 border rounded-lg border-[#5d2611] hover:border-[#cd7479] duration-300"
+        >
           <fieldset className="flex flex-col gap-2 pb-4">
             <div>
               <legend>Personal information:</legend>
@@ -13,34 +39,87 @@ const RHForm: FC = () => {
               Name:
               <input
                 type="text"
+                {...register('firstname', {
+                  required: '*The field must be filled in.',
+                  validate: (value) => {
+                    const isUpper =
+                      value.charAt(0) === value.charAt(0).toUpperCase();
+                    return isUpper || '*First letter must be uppercase';
+                  },
+                })}
                 className="border m-1 p-1 rounded-lg border-[#5d2611] focus:border-[#cd7479] focus:outline-none duration-300"
               />
+              <div>
+                {errors?.firstname && (
+                  <p className="text-xs text-red-500">
+                    {errors?.firstname?.message || 'error!'}
+                  </p>
+                )}
+              </div>
             </label>
             <label>
               Age:
               <input
                 type="text"
+                {...register('age', {
+                  required: '*The field must be filled in.',
+                  validate: (value) => {
+                    const num = Number(value);
+                    if (isNaN(num)) {
+                      return 'The value should be a number';
+                    }
+                    if (num <= 0 || num > 99) {
+                      return '*Age must be between 1 and 99';
+                    }
+                  },
+                })}
                 className="border m-1 p-1 rounded-lg border-[#5d2611] focus:border-[#cd7479] focus:outline-none duration-300"
               />
+              <div>
+                {errors?.age && (
+                  <p className="text-red-500 text-xs">
+                    {errors?.age?.message || 'error!'}
+                  </p>
+                )}
+              </div>
             </label>
             <label>
               Gender:
               <div className="flex gap-2">
                 <label>
                   male&nbsp;
-                  <input type="radio" name="gender" value="male" required />
+                  <input
+                    type="radio"
+                    value="male"
+                    {...register('gender', {
+                      required: 'Please select a gender',
+                    })}
+                  />
                 </label>
                 <label>
                   female&nbsp;
-                  <input type="radio" name="gender" value="female" />
+                  <input
+                    type="radio"
+                    value="female"
+                    {...register('gender', {
+                      required: 'Please select a gender',
+                    })}
+                  />
                 </label>
+                {errors?.gender && (
+                  <p className="text-red-500 text-xs">
+                    {errors?.gender?.message}
+                  </p>
+                )}
               </div>
             </label>
             <label htmlFor="country-input">
               Country:
               <input
                 id="country-input"
-                name="country"
+                {...register('country', {
+                  required: '*Please select a country ',
+                })}
                 list="countries-list"
                 placeholder="Start typing…"
                 className="border m-1 p-1 rounded-lg border-[#5d2611] focus:border-[#cd7479] focus:outline-none duration-300"
@@ -53,6 +132,11 @@ const RHForm: FC = () => {
                 <option value="Russia"></option>
                 <option value="USA"></option>
               </datalist>
+              {errors?.country && (
+                <p className="text-red-500 text-xs">
+                  {errors?.country?.message}
+                </p>
+              )}
             </label>
           </fieldset>
           <fieldset className="flex flex-col gap-2 pb-4 pt-4">
@@ -64,11 +148,19 @@ const RHForm: FC = () => {
               <input
                 type="email"
                 id="email"
-                name="email"
-                required
+                {...register('email', {
+                  required: '*The field must be filled in.',
+                  pattern: {
+                    value: /^\S+@\S+\.\S+$/,
+                    message: 'invalid email format',
+                  },
+                })}
                 placeholder="example@domain.com"
                 className="border m-1 p-1 rounded-lg border-[#5d2611] focus:border-[#cd7479] focus:outline-none duration-300"
               />
+              {errors?.email && (
+                <p className="text-red-500 text-xs">{errors?.email?.message}</p>
+              )}
             </label>
 
             <label htmlFor="password">
@@ -76,22 +168,50 @@ const RHForm: FC = () => {
               <input
                 type="password"
                 id="password"
-                name="password"
-                required
+                {...register('password', {
+                  required: '*The field must be filled in.',
+                  validate: (value) => {
+                    if (
+                      !/[A-Z]/.test(value) ||
+                      !/[a-z]/.test(value) ||
+                      !/\d/.test(value) ||
+                      !/[!@#$%^&*()]/.test(value)
+                    ) {
+                      return '*the password should consist of 1 number, 1 uppercased letter, 1 lowercased letter, 1 special character';
+                    }
+                  },
+                })}
                 placeholder="Enter the password..."
                 className="border m-1 p-1 rounded-lg border-[#5d2611] focus:border-[#cd7479] focus:outline-none duration-300"
               />
+              {errors?.password && (
+                <p className="text-wrap text-red-500 text-xs">
+                  {errors?.password?.message}
+                </p>
+              )}
             </label>
             <label htmlFor="confirm-password">
-              Password:
+              Confirm the password:
               <input
                 type="password"
                 id="confirm-password"
-                name="confirm-password"
-                required
+                {...register('confirmPassword', {
+                  required: '*The field must be filled in.',
+                  validate: (value) => {
+                    if (value !== watchedValue) {
+                      return '*passwords don t match';
+                    }
+                    return true;
+                  },
+                })}
                 placeholder="Repeat the password..."
                 className="border m-1 p-1 rounded-lg border-[#5d2611] focus:border-[#cd7479] focus:outline-none duration-300"
               />
+              {errors?.confirmPassword && (
+                <p className="text-wrap text-red-500 text-xs">
+                  {errors?.confirmPassword?.message}
+                </p>
+              )}
             </label>
             <label className="cursor-pointer">
               <span>Upload an image</span>
